@@ -20,30 +20,52 @@ public class IntegrationTest
     private TestRestTemplate restTemplate;
 
     /**
-     * Testuje szczęśliwą ścieżkę dla istniejącego użytkownika GitHub.
-     * Sprawdza czy lista nie-forkowanych repozytoriów zawiera wymagane dane.
+     * Metoda powinna zadziałać poprawnie
+     * -------------------------------------------------------------
+     *
+     * Dostaniemy repo oraz branche użytkownika PirchHD
      */
     @Test
-    void shouldReturnRepositoriesWithBranchesForExistingUser()
+    void integrationTest1()
     {
         /**----------------------------------- Przygotowanie danych -------------------------------------**/
         String username = "PirchHD";
-        /**----------------------------------- Odpalenie merody ------------------------------------------**/
+        /**----------------------------------- Wywołanie metody ------------------------------------------**/
         ResponseEntity<Repository[]> response = restTemplate.getForEntity("/api/" + username, Repository[].class);
         /**----------------------------------- Sprawdzenie danych -------------------------------------**/
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
         Repository[] repos = response.getBody();
-        assertThat(repos).isNotNull();
-        assertThat(repos.length).isGreaterThan(0);
+        assertThat(repos).as("Odpowiedź API powinna zdziałać").isNotNull();
+        assertThat(repos.length).as("Lista repozytoriów nie powinna być pusta").isGreaterThan(0);
+        for (Repository repo : repos)
+            assertValidRepository(repo, username);
+    }
 
-        Repository firstRepo = repos[0];
-        assertThat(firstRepo.name()).isNotNull();
-        assertThat(firstRepo.ownerLogin()).isEqualToIgnoringCase("octocat");
-        assertThat(firstRepo.branches()).isNotNull().isNotEmpty();
+    /**
+     * Metoda sprawdzająca poprawność obiektu Repository.
+     *
+     * @param repo              - (Repository) repozytorium do sprawdzenia
+     * @param expectedUsername  - (String) oczekiwany właściciel repozytorium
+     */
+    private void assertValidRepository(Repository repo, String expectedUsername)
+    {
+        assertThat(repo).as("Repozytorium nie powinno być nullem").isNotNull();
+        assertThat(repo.name()).as("Repozytorium nie ma nazwy").isNotNull().isNotEmpty();
+        assertThat(repo.ownerLogin()).as("Repozytorium ma nieprawidłowego właściciela").isEqualToIgnoringCase(expectedUsername);
+        List<Branch> branches = repo.branches();
+        assertThat(branches).as("Repozytorium nie zawiera gałęzi").isNotNull().isNotEmpty();
+        for (Branch branch : branches)
+            assertValidBranch(branch);
 
-        Branch firstBranch = firstRepo.branches().get(0);
-        assertThat(firstBranch.name()).isNotEmpty();
-        assertThat(firstBranch.lastCommitSha()).isNotEmpty();
+    }
+
+    /**
+     * Metoda sprawdzająca poprawność obiektu Branch.
+     *
+     * @param branch   - (Branch) gałąź do sprawdzenia
+     */
+    private void assertValidBranch(Branch branch)
+    {
+        assertThat(branch.name()).as("Gałąź nie ma nazwy").isNotNull().isNotEmpty();
+        assertThat(branch.lastCommitSha()).as("Gałąź nie zawiera SHA ostatniego commita").isNotNull().isNotEmpty();
     }
 }
