@@ -14,5 +14,6 @@
 
 🔗 Endpointy
 
-GET /api/users/{username}/repositories   - Zwraca listę publicznych, nie-forkowanych repozytoriów użytkownika.
-Przykład: GET /api/users/PirchHD/repositories
+Zwraca listę publicznych, nie-forkowanych repozytoriów użytkownika:
++ GET /api/users/{username}/repositories   
++ Przykład: GET /api/users/PirchHD/repositories
